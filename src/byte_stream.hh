@@ -29,7 +29,6 @@ protected:
   uint64_t num_bytes_pushed_ = 0;
   uint64_t num_bytes_poped_ = 0;
   bool closed_ = false;
-
 };
 
 class Writer : public ByteStream

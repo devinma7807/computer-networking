@@ -8,15 +8,15 @@
 using namespace std;
 
 void get_URL( const string& host, const string& path )
-{ 
+{
   TCPSocket tcpsocket;
-  tcpsocket.connect(Address(host, "http"));
+  tcpsocket.connect( Address( host, "http" ) );
   const string request = "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
-  tcpsocket.write(request);
+  tcpsocket.write( request );
 
   string response;
-  while (!tcpsocket.eof()){
-    tcpsocket.read(response);
+  while ( !tcpsocket.eof() ) {
+    tcpsocket.read( response );
     cout << response;
   }
   tcpsocket.close();
