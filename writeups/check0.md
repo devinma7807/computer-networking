@@ -23,7 +23,7 @@ bugs, asymptotic performance, empirical performance, required
 implementation time and difficulty, and other factors. Include any
 measurements if applicable.]
 
-I have a send buffer (a string variable) that stores the buffered string. The available capacity is bascially the total capacity - the current size of the buffer. The reader reads from the buffer, this is equivalant to poping data from the buffer. Currently my implementation assumes no error happens in the stream (the "error_" state is not used at all). A better solution may include error handling at the reader end, and maybe some mechanism to notify the sender of any bytes of data received in error so that sender can re-send that part of the data.
+I have a send buffer (a string variable) that stores the buffered data. The available capacity is bascially the total capacity - the current size of the buffer. The reader reads from the buffer, this is equivalant to poping data from the buffer. Currently my implementation assumes no error happens in the stream (the "error_" state is not used at all). A better solution may include error handling at the reader end, and maybe some mechanism to notify the sender of any bytes of data received in error so that sender can re-send that part of the data.
 
 - Optional: I had unexpected difficulty with: [describe]
 
