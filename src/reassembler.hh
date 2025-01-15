@@ -52,4 +52,5 @@ private:
   uint64_t finish_index = -1;
   uint64_t cache_size = 0;
   uint64_t bytes_pending = 0;
+  uint64_t first_empty = 0;
 };

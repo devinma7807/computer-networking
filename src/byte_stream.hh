@@ -33,6 +33,9 @@ protected:
   uint64_t num_bytes_pushed_ = 0;
   uint64_t num_bytes_poped_ = 0;
   bool closed_ = false;
+  uint64_t start_index_ = 0;
+  uint64_t end_index = 0;
+  uint64_t buffer_size = 0;
 };
 
 class Writer : public ByteStream

@@ -2,11 +2,13 @@
 #include "debug.hh"
 #include <iostream>
 #include <vector>
+#include <chrono>
 using namespace std;
 
 void Reassembler::insert( uint64_t first_index, string data, bool is_last_substring )
 { 
-  // cout << endl;
+  // cout << endl << "data = " << data << " first index = " << first_index << endl;;
+  auto start_clock = chrono::high_resolution_clock::now();
   uint64_t next_expected = output_.writer().bytes_pushed();
   uint64_t available_capacity = output_.writer().available_capacity();
 
@@ -49,7 +51,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     }
   }
 
-  string trimmed_data = data.substr(start_index_data, end_index_data);
+  string_view trimmed_data(data.data() + start_index_data, end_index_data);
   if (is_last_substring && last_data_index <= last_available_index){
     finish = true;
     finish_index = last_data_index;
@@ -60,18 +62,45 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   //   cache_[static_cast<uint64_t>(x + write_index)] = trimmed_data[x];
   // }
   uint64_t cache_write_index = write_index % cache_size;
-  for (int x = 0; x < end_index_data; x++){
-    if (!cache_occupied_[cache_write_index]){
-      cache_[cache_write_index] = trimmed_data[x];
-      cache_occupied_[cache_write_index] = true;
-      bytes_pending += 1;
-      // cout << "store " << trimmed_data[x] << " to index " << cache_write_index << endl;
+  if (write_index == next_expected){
+    output_.writer().push(string(trimmed_data));
+    cache_next_expected += end_index_data;
+    if (cache_next_expected >= cache_size){
+      cache_next_expected %= cache_size;
     }
-    cache_write_index += 1;
-    if (cache_write_index >= cache_size){
-      cache_write_index = 0;
+    // cout << "push " << trimmed_data << endl;
+    for (int x = 0; x < end_index_data; x++){
+      if (cache_occupied_[cache_write_index]){
+        // cache_[cache_write_index] = char();
+        cache_occupied_[cache_write_index] = false;
+        // cout << "reset cache at index " << cache_write_index << endl;
+        bytes_pending -= 1;
+        if ( cache_next_expected >= cache_size ){
+          cache_next_expected = 0;
+        }
+      }
+      cache_write_index += 1;
+      if (cache_write_index >= cache_size){
+        cache_write_index = 0;
+      }
     }
   }
+  else{
+    for (int x = 0; x < end_index_data; x++){
+      if (!cache_occupied_[cache_write_index]){
+        cache_[cache_write_index] = trimmed_data[x];
+        // cout << "write " << trimmed_data[x] << " at index " << cache_write_index << endl;
+        cache_occupied_[cache_write_index] = true;
+        bytes_pending += 1;
+        // cout << "store " << trimmed_data[x] << " to index " << cache_write_index << endl;
+      }
+      cache_write_index += 1;
+      if (cache_write_index >= cache_size){
+        cache_write_index = 0;
+      }
+    }
+  }
+  
   
 
   string data_to_push = "";
@@ -90,11 +119,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   // for (size_t x = 0; x < pushed_keys.size(); x++){
   //   cache_.erase(pushed_keys[x]);
   // }
-
+  // cout << "cache next expected is " << cache_next_expected <<endl;
   while (cache_occupied_[cache_next_expected]){
     data_to_push += cache_[cache_next_expected];
     // cout << "push " << cache_[cache_next_expected] << " at index " << cache_next_expected << endl;
-    cache_[cache_next_expected] = char();
+    // cache_[cache_next_expected] = char();
     cache_occupied_[cache_next_expected] = false;
     bytes_pending -= 1;
     cache_next_expected += 1;
@@ -107,7 +136,9 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   if (!data_to_push.empty()){output_.writer().push(data_to_push);}
 
   if (finish && output_.writer().bytes_pushed() == finish_index){output_.writer().close();}
-
+  auto end_clock = chrono::high_resolution_clock::now();
+  chrono::duration<double> elapsed = end_clock - start_clock;
+  // cout << "Elapsed time: " << elapsed.count() << " seconds\n";
 }
 
 // How many bytes are stored in the Reassembler itself?
