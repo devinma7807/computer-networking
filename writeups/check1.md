@@ -16,6 +16,8 @@ I was surprised by or edified to learn that: [describe]
 Report from the hands-on component of the lab checkpoint: [include
 information from 2.1(4), and report on your experience in 2.2]
 
+
+
 Describe Reassembler structure and design. [Describe data structures and
 approach taken. Describe alternative designs considered or tested.
 Describe benefits and weaknesses of your design compared with
@@ -35,3 +37,7 @@ Remaining Bugs:
 - Optional: I think you could make this lab better by: [describe]
 
 - Optional: I'm not sure about: [describe]
+
+
+
+1223/1230 packets, 0% loss, min/avg/ewma/max = 80.639/92.988/90.849/184.567 ms

@@ -45,6 +45,9 @@ public:
 private:
   ByteStream output_;
   std::map<uint64_t, std::string> cache_ {};
-  uint64_t last_index = -1;
+  // std::vector<char> cache_{};
+  // bool cache_initialized = false;
   bool finish = false;
+  uint64_t finish_index = -1;
+  
 };

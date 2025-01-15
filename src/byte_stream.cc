@@ -9,7 +9,8 @@ void Writer::push( string data )
   (void)data; // Your code here.
   uint64_t data_size = static_cast<uint64_t>( data.size() );
   uint64_t num_bytes_to_push = min( available_capacity(), data_size );
-  buffer_.append( data.data(), num_bytes_to_push );
+  // buffer_.append( data.data(), num_bytes_to_push );
+  buffer_.insert( buffer_.end(), data.begin(), data.begin() + num_bytes_to_push );
   num_bytes_pushed_ += num_bytes_to_push;
 }
 
@@ -35,15 +36,17 @@ uint64_t Writer::bytes_pushed() const
 }
 
 string_view Reader::peek() const
-{
-  return string_view( buffer_.data(), buffer_.size() ); // Your code here.
+{ if (buffer_.empty()){return string_view{};}
+  // return string_view( buffer_.data(), buffer_.size() ); // Your code here.
+  return string_view( &buffer_.front(), buffer_.size() );
 }
 
 void Reader::pop( uint64_t len )
 {
   (void)len; // Your code here.
   uint64_t num_bytes_to_pop = min( len, bytes_buffered() );
-  buffer_.erase( 0, num_bytes_to_pop );
+  // buffer_.erase( 0, num_bytes_to_pop );
+  buffer_.erase( buffer_.begin(), buffer_.begin() + num_bytes_to_pop );
   num_bytes_poped_ += num_bytes_to_pop;
 }
 
