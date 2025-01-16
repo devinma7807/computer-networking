@@ -45,12 +45,12 @@ public:
 private:
   ByteStream output_;
   // std::map<uint64_t, std::string> cache_ {};
-  std::vector<char> cache_{};
-  std::vector<bool> cache_occupied_{};
+  // std::vector<char> cache_{};
+  std::map<uint64_t, std::pair<uint64_t, std::string>> cache_{};
   bool cache_initialized = false;
   bool finish = false;
   uint64_t finish_index = -1;
-  uint64_t cache_size = 0;
+  // uint64_t cache_size = 0;
   uint64_t bytes_pending = 0;
-  uint64_t first_empty = 0;
+  int first_known = -1;
 };
