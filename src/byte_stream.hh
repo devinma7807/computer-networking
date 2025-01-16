@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <deque>
 
 class Reader;
 class Writer;

@@ -20,21 +20,20 @@ int main()
   datagram += char( 10 );
   datagram += char( 144 );
   datagram += char( 0 );
-  datagram += char( 42 ); //destination address
+  datagram += char( 42 ); // destination address
 
   datagram += char( 0 );
   datagram += char( 1 );
-  datagram += char ( 4 );
+  datagram += char( 4 );
   datagram += char( 0 );
 
-  
   string user_payload = "hi";
   datagram += char( 0 );
-  datagram += (user_payload.length() + 8);
-  datagram += string (2, 0 );
+  datagram += ( user_payload.length() + 8 );
+  datagram += string( 2, 0 );
   // datagram += "Lab1 exercise 2.2: Hi";
   datagram += user_payload;
 
-  RawSocket {}.sendto( Address {"10.144.0.42"}, datagram);
+  RawSocket {}.sendto( Address { "10.144.0.42" }, datagram );
   return 0;
 }

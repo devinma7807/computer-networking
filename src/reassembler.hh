@@ -44,7 +44,7 @@ public:
 
 private:
   ByteStream output_;
-  std::map<uint64_t, std::pair<uint64_t, std::string>> cache_{};
+  std::map<uint64_t, std::pair<uint64_t, std::string>> cache_ {};
   bool cache_initialized = false;
   bool finish = false;
   uint64_t finish_index = -1;

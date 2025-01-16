@@ -2,13 +2,16 @@
 
 using namespace std;
 
-ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity ) {buffer_.reserve(capacity_*8);}
+ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity )
+{
+  buffer_.reserve( capacity_ * 8 );
+}
 
 void Writer::push( string data )
 {
   // (void)data; // Your code here.
-  if (start_index_ > buffer_.size() / 2){
-    buffer_.erase(buffer_.begin(), buffer_.begin() + start_index_ );
+  if ( start_index_ > buffer_.size() / 2 ) {
+    buffer_.erase( buffer_.begin(), buffer_.begin() + start_index_ );
     end_index -= start_index_;
     start_index_ = 0;
   }
@@ -42,7 +45,10 @@ uint64_t Writer::bytes_pushed() const
 }
 
 string_view Reader::peek() const
-{ if (buffer_.empty()){return string_view{};}
+{
+  if ( buffer_.empty() ) {
+    return string_view {};
+  }
   return string_view( buffer_.data() + start_index_, buffer_size );
 }
 
