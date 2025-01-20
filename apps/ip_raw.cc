@@ -20,7 +20,7 @@ int main()
   datagram += char( 10 );
   datagram += char( 144 );
   datagram += char( 0 );
-  datagram += char( 42 ); // destination address
+  datagram += char( 42 );
 
   datagram += char( 0 );
   datagram += char( 1 );
