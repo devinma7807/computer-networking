@@ -17,7 +17,6 @@ Report from the hands-on component of the lab checkpoint: [include
 information from 2.1(4), and report on your experience in 2.2]
 
 2.1
-1223/1230 packets, 0% loss, min/avg/ewma/max = 80.639/92.988/90.849/184.567 ms
     a. The average round trip time was 92.988 ms.
     b. The delivery rate was 99.43%, so the loss rate 0.57%.
     c. I did not see any duplicated datagrams.
