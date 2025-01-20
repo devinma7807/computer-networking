@@ -15,7 +15,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   uint64_t write_index = max( next_expected, first_index );
   if ( is_last_substring && last_data_index <= last_available_index ) {
     finish = true;
-    finish_index = last_data_index;
   }
 
   last_data_index = min( last_available_index, last_data_index );
