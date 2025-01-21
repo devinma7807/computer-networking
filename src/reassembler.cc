@@ -1,7 +1,6 @@
 #include "reassembler.hh"
 #include "debug.hh"
 #include <chrono>
-#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -80,7 +79,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   }
 
   string data_to_push = "";
-  while ( cache_.begin()->first == next_expected ) {
+  while ( !cache_.empty() && cache_.begin()->first == next_expected ) {
     uint64_t current_segment_size = cache_.begin()->second.first - cache_.begin()->first + 1;
     data_to_push += cache_.begin()->second.second;
     bytes_pending -= current_segment_size;

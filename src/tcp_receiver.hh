@@ -27,4 +27,11 @@ public:
 
 private:
   Reassembler reassembler_;
+  Wrap32 initial_seqno_ {0};
+  bool syn_set_ = false;
+  bool fin_set_ = false;
+  std::optional<Wrap32> ackno_ {};
+  uint64_t stream_seqno_ {0};
+  bool RST_ = false;
+
 };

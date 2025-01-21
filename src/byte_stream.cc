@@ -9,7 +9,6 @@ ByteStream::ByteStream( uint64_t capacity ) : capacity_( capacity )
 
 void Writer::push( string data )
 {
-  // (void)data; // Your code here.
   if ( start_index_ > buffer_.size() / 2 ) {
     buffer_.erase( buffer_.begin(), buffer_.begin() + start_index_ );
     end_index -= start_index_;
