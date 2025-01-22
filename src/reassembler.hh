@@ -41,7 +41,7 @@ public:
 
   // Access output stream writer, but const-only (can't write from outside)
   const Writer& writer() const { return output_.writer(); }
-  
+
 private:
   ByteStream output_;
   std::map<uint64_t, std::pair<uint64_t, std::string>> cache_ {};
