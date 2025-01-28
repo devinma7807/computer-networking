@@ -17,7 +17,7 @@ uint64_t Wrap32::unwrap( Wrap32 zero_point, uint64_t checkpoint ) const
   uint64_t diff = static_cast<uint64_t>( raw_value_ - zero_point.raw_value_ );
   uint64_t mult = static_cast<uint64_t>( checkpoint / MAX_UINT32 );
 
-  uint64_t closest = (mult == 0) ? diff : ( mult - 1 ) * MAX_UINT32 + diff;
+  uint64_t closest = ( mult == 0 ) ? diff : ( mult - 1 ) * MAX_UINT32 + diff;
   uint64_t current_diff = ( checkpoint >= closest ) ? checkpoint - closest : closest - checkpoint;
   for ( uint64_t x = mult; x <= mult + 1; x++ ) {
     uint64_t new_closest = x * MAX_UINT32 + diff;

@@ -27,7 +27,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
   if ( cache_.empty() && last_data_index >= write_index ) {
     cache_[write_index] = make_pair( last_data_index, string( trimmed_data ) );
-    bytes_pending += last_data_index - write_index + 1;
   } else {
     for ( auto it = cache_.begin(); it != cache_.end(); ++it ) {
 
@@ -35,7 +34,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       if ( write_index < current_segment_start_index ) {
         if ( last_data_index < current_segment_start_index ) {
           cache_[write_index] = make_pair( last_data_index, string( trimmed_data ) );
-          bytes_pending += last_data_index - write_index + 1;
           break;
         } else {
           uint64_t trim_size = current_segment_start_index - write_index;
@@ -43,7 +41,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
             = make_pair( current_segment_start_index - 1, string( trimmed_data.substr( 0, trim_size ) ) );
           uint64_t new_segment_start = max( write_index + trim_size, it->second.first + 1 );
 
-          bytes_pending += trim_size;
           if ( last_data_index < new_segment_start ) {
             break;
           } else {
@@ -75,14 +72,12 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
                                         last_data_index - last_segment_start_index + 1 );
 
     cache_[last_segment_start_index] = make_pair( last_data_index, string( trimmed_data ) );
-    bytes_pending += last_data_index - last_segment_start_index + 1;
   }
 
   string data_to_push = "";
   while ( !cache_.empty() && cache_.begin()->first == next_expected ) {
     uint64_t current_segment_size = cache_.begin()->second.first - cache_.begin()->first + 1;
     data_to_push += cache_.begin()->second.second;
-    bytes_pending -= current_segment_size;
     next_expected += current_segment_size;
     cache_.erase( cache_.begin()->first );
   }
@@ -91,7 +86,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     output_.writer().push( data_to_push );
   }
 
-  if ( finish && bytes_pending == 0 ) {
+  if ( finish && cache_.empty() ) {
     output_.writer().close();
   }
 }
@@ -100,6 +95,9 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 // This function is for testing only; don't add extra state to support it.
 uint64_t Reassembler::count_bytes_pending() const
 {
-  // debug( "unimplemented count_bytes_pending() called" );
-  return bytes_pending;
+  uint64_t total_bytes_pending = 0;
+  for ( auto x = cache_.begin(); x != cache_.end(); x++ ) {
+    total_bytes_pending += x->second.second.size();
+  }
+  return total_bytes_pending;
 }

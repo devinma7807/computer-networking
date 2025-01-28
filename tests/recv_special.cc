@@ -197,7 +197,7 @@ int main()
       // The spec is more restrictive on RST acceptance; we use simpler logic in CS144.
       TCPReceiverTestHarness test { "RST flag set -> stream error", 10 };
       test.execute( SegmentArrives {}.with_seqno( rd() ).with_rst().without_ackno() );
-      test.execute( HasError { true } ); 
+      test.execute( HasError { true } );
     }
 
     {
