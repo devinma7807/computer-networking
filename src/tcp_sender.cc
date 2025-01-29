@@ -29,21 +29,22 @@ void TCPSender::push( const TransmitFunction& transmit )
     temp_receive_window = 1;
   }
   while ( ( temp_receive_window > 0 && !stream_bytes.empty() )
-          || ( temp_receive_window > 0 && writer().is_closed() && !fin_set_ ) || !syn_set_) {
+          || ( temp_receive_window > 0 && writer().is_closed() && !fin_set_ ) || !syn_set_ ) {
     if ( !syn_set_ ) {
       syn_set_ = true;
       message.SYN = true;
       current_RTO_ = initial_RTO_ms_;
+      seqno_ = isn_;
     }
     uint64_t available_payload_size = min( { static_cast<uint64_t>( temp_receive_window - message.SYN ),
-                                              stream_bytes.size(),
-                                              TCPConfig::MAX_PAYLOAD_SIZE } );
+                                             stream_bytes.size(),
+                                             TCPConfig::MAX_PAYLOAD_SIZE } );
     if ( available_payload_size > 0 ) {
       message.payload = string( stream_bytes.substr( 0, available_payload_size ) );
       reader().pop( available_payload_size );
     }
     if ( temp_receive_window > message.sequence_length() && writer().is_closed() && !fin_set_
-          && reader().is_finished() ) {
+         && reader().is_finished() ) {
       message.FIN = true;
       fin_set_ = true;
     }
@@ -52,8 +53,9 @@ void TCPSender::push( const TransmitFunction& transmit )
       transmit( message );
       receive_window_ -= message_length;
       temp_receive_window -= message_length;
-      send_buffer_[isn_] = message;
-      isn_ = isn_ + message_length;
+      send_buffer_[abs_seqno_] = message;
+      seqno_ = seqno_ + message_length;
+      abs_seqno_ += message_length;
       stream_bytes = reader().peek();
       message = make_empty_message();
     }
@@ -63,8 +65,8 @@ void TCPSender::push( const TransmitFunction& transmit )
 TCPSenderMessage TCPSender::make_empty_message() const
 {
   TCPSenderMessage empty_message {};
-  empty_message.seqno = isn_;
-  if ( reader().has_error() || writer().has_error() ) {
+  empty_message.seqno = syn_set_ ? seqno_ : isn_;
+  if ( writer().has_error() ) {
     empty_message.RST = true;
   }
   return empty_message;
@@ -72,26 +74,31 @@ TCPSenderMessage TCPSender::make_empty_message() const
 
 void TCPSender::receive( const TCPReceiverMessage& msg )
 {
+  uint64_t abs_ackno = msg.ackno->unwrap( isn_, abs_seqno_ );
+
   if ( !send_buffer_.empty()
-       && prev( send_buffer_.end() )->first + prev( send_buffer_.end() )->second.sequence_length() < msg.ackno )
+       && prev( send_buffer_.end() )->first + prev( send_buffer_.end() )->second.sequence_length() < abs_ackno )
     return;
   if ( !msg.ackno.has_value() && msg.window_size == 0 ) {
     writer().set_error();
     return;
   }
-  Wrap32 ackno = msg.ackno.has_value() ? *msg.ackno : isn_;
 
+  vector<uint64_t> key_to_erase;
   for ( auto x = send_buffer_.begin(); x != send_buffer_.end(); x++ ) {
-    if ( x->second.seqno + x->second.sequence_length() <= ackno ) {
+
+    if ( x->first + x->second.sequence_length() <= abs_ackno ) {
       if ( x->second.SYN ) {
         receive_window_ = max( uint16_t( 1 ), msg.window_size );
         max_receive_window_ = receive_window_;
       } else {
         receive_window_ += x->second.sequence_length();
       }
-
-      send_buffer_.erase( x->first );
+      key_to_erase.push_back( x->first );
     }
+  }
+  for ( size_t x = 0; x < key_to_erase.size(); x++ ) {
+    send_buffer_.erase( key_to_erase[x] );
   }
 
   receiver_full_ = ( msg.window_size == 0 );
@@ -99,9 +106,9 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     receive_window_ += ( msg.window_size - max_receive_window_ );
     max_receive_window_ = msg.window_size;
   }
-  if ( pre_ackno_ < ackno ) {
+  if ( pre_ackno_ < abs_ackno ) {
     timer_ = 0;
-    pre_ackno_ = ackno;
+    pre_ackno_ = abs_ackno;
     num_consecutive_retran_ = 0;
     current_RTO_ = initial_RTO_ms_;
   }
