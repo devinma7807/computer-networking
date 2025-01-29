@@ -3,6 +3,7 @@
 #include "byte_stream.hh"
 #include "tcp_receiver_message.hh"
 #include "tcp_sender_message.hh"
+#include <map>
 
 #include <functional>
 
@@ -42,4 +43,14 @@ private:
   ByteStream input_;
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
+  std::map<Wrap32, TCPSenderMessage> send_buffer_ {};
+  uint16_t receive_window_ {};
+  bool syn_set_ = false;
+  bool fin_set_ = false;
+  bool fin_sent_ = false;
+  uint64_t num_consecutive_retran_ = 0;
+  uint64_t current_RTO_ {};
+  uint64_t timer_ = 0;
+  Wrap32 pre_ackno_ {0};
+  Wrap32 zero_point {0};
 };
