@@ -44,13 +44,13 @@ private:
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
   std::map<Wrap32, TCPSenderMessage> send_buffer_ {};
-  uint16_t receive_window_ {};
+  uint16_t receive_window_ = 1;
+  uint16_t max_receive_window_ = 1;
+  bool receiver_full_ = true;
   bool syn_set_ = false;
   bool fin_set_ = false;
-  bool fin_sent_ = false;
   uint64_t num_consecutive_retran_ = 0;
   uint64_t current_RTO_ {};
   uint64_t timer_ = 0;
-  Wrap32 pre_ackno_ {0};
-  Wrap32 zero_point {0};
+  Wrap32 pre_ackno_ { 0 };
 };

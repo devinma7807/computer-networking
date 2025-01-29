@@ -29,7 +29,7 @@ public:
   bool operator==( const Wrap32& other ) const { return raw_value_ == other.raw_value_; }
   bool operator<( const Wrap32& other ) const { return raw_value_ < other.raw_value_; }
   bool operator<=( const Wrap32& other ) const { return raw_value_ <= other.raw_value_; }
-  uint32_t raw_value(){return raw_value_;}
+
 protected:
   uint32_t raw_value_ {};
 };
