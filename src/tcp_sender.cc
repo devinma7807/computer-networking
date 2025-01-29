@@ -24,54 +24,38 @@ void TCPSender::push( const TransmitFunction& transmit )
 {
   TCPSenderMessage message = make_empty_message();
   string_view stream_bytes = reader().peek();
+  uint16_t temp_receive_window = receive_window_;
   if ( receiver_full_ && receive_window_ > 0 ) {
+    temp_receive_window = 1;
+  }
+  while ( ( temp_receive_window > 0 && !stream_bytes.empty() )
+          || ( temp_receive_window > 0 && writer().is_closed() && !fin_set_ ) || !syn_set_) {
     if ( !syn_set_ ) {
       syn_set_ = true;
       message.SYN = true;
       current_RTO_ = initial_RTO_ms_;
-    } else if ( !stream_bytes.empty() ) {
-      message.payload = char( stream_bytes[0] );
     }
-
-    if ( message.sequence_length() == 0 && writer().is_closed() ) {
+    uint64_t available_payload_size = min( { static_cast<uint64_t>( temp_receive_window - message.SYN ),
+                                              stream_bytes.size(),
+                                              TCPConfig::MAX_PAYLOAD_SIZE } );
+    if ( available_payload_size > 0 ) {
+      message.payload = string( stream_bytes.substr( 0, available_payload_size ) );
+      reader().pop( available_payload_size );
+    }
+    if ( temp_receive_window > message.sequence_length() && writer().is_closed() && !fin_set_
+          && reader().is_finished() ) {
       message.FIN = true;
+      fin_set_ = true;
     }
-    if ( message.sequence_length() > 0 ) {
+    uint64_t message_length = message.sequence_length();
+    if ( message_length > 0 ) {
       transmit( message );
-      reader().pop( message.sequence_length() );
-      send_buffer_[message.seqno] = message;
-      isn_ = isn_ + 1;
-      receive_window_ -= 1;
-    }
-  } else {
-    while ( ( receive_window_ > 0 && !stream_bytes.empty() )
-            || ( receive_window_ > 0 && writer().is_closed() && !fin_set_ ) ) {
-      if ( !syn_set_ ) {
-        syn_set_ = true;
-        message.SYN = true;
-        current_RTO_ = initial_RTO_ms_;
-      }
-      uint64_t available_payload_size = min( { static_cast<uint64_t>( receive_window_ - message.SYN ),
-                                               stream_bytes.size(),
-                                               TCPConfig::MAX_PAYLOAD_SIZE } );
-      if ( available_payload_size > 0 ) {
-        message.payload = string( stream_bytes.substr( 0, available_payload_size ) );
-        reader().pop( available_payload_size );
-      }
-      if ( receive_window_ > message.sequence_length() && writer().is_closed() && !fin_set_
-           && reader().is_finished() ) {
-        message.FIN = true;
-        fin_set_ = true;
-      }
-      uint64_t message_length = message.sequence_length();
-      if ( message_length > 0 ) {
-        transmit( message );
-        receive_window_ -= message_length;
-        send_buffer_[isn_] = message;
-        isn_ = isn_ + message_length;
-        stream_bytes = reader().peek();
-        message = make_empty_message();
-      }
+      receive_window_ -= message_length;
+      temp_receive_window -= message_length;
+      send_buffer_[isn_] = message;
+      isn_ = isn_ + message_length;
+      stream_bytes = reader().peek();
+      message = make_empty_message();
     }
   }
 }
@@ -128,8 +112,9 @@ void TCPSender::tick( uint64_t ms_since_last_tick, const TransmitFunction& trans
   timer_ += ms_since_last_tick;
   if ( send_buffer_.empty() ) {
     timer_ = 0;
+    return;
   }
-  if ( timer_ >= current_RTO_ && !send_buffer_.empty() ) {
+  if ( timer_ >= current_RTO_ ) {
     transmit( send_buffer_.begin()->second );
     num_consecutive_retran_ += 1;
     if ( !receiver_full_ || send_buffer_.begin()->second.SYN ) {
