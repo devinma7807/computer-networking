@@ -1,5 +1,5 @@
-#include "socket.hh"
-
+// #include "socket.hh"
+#include "tcp_minnow_socket.hh"
 #include <cstdlib>
 #include <iostream>
 #include <span>
@@ -9,19 +9,19 @@ using namespace std;
 
 void get_URL( const string& host, const string& path )
 {
-  TCPSocket tcpsocket;
-  tcpsocket.connect( Address( host, "http" ) );
+  CS144TCPSocket socket;
+  socket.connect( Address( host, "http" ) );
   const string request = "GET " + path + " HTTP/1.1\r\nHost: " + host + "\r\nConnection: close\r\n\r\n";
-  tcpsocket.write( request );
+  socket.write( request );
 
   string response;
-  while ( !tcpsocket.eof() ) {
-    tcpsocket.read( response );
+  while ( !socket.eof() ) {
+    socket.read( response );
     cout << response;
   }
-  tcpsocket.close();
-
-  cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
+  socket.wait_until_closed();
+  // socket.close();
+  // cerr << "Function called: get_URL(" << host << ", " << path << ")\n";
   // cerr << "Warning: get_URL() has not been implemented yet.\n";
 }
 

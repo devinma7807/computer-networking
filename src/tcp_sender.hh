@@ -43,6 +43,7 @@ private:
   ByteStream input_;
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
+  // map<uint64_t, TCPSenderMessage> send_buffer_{};
   std::vector<std::pair<uint64_t, TCPSenderMessage>> send_buffer_{};
   uint64_t abs_seqno_ = 0;
   Wrap32 seqno_ { 0 };
@@ -51,7 +52,7 @@ private:
   uint64_t num_consecutive_retran_ = 0;
   uint64_t current_RTO_ {};
   uint64_t timer_ = 0;
-  uint64_t pre_ackno_ { 0 };
+  uint64_t pre_abs_ackno_ { 0 };
   bool receiver_full_ = true;
   bool syn_set_ = false;
   bool fin_set_ = false;

@@ -106,9 +106,9 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     receive_window_ += ( msg.window_size - max_receive_window_ );
     max_receive_window_ = msg.window_size;
   }
-  if ( pre_ackno_ < abs_ackno ) {
+  if ( pre_abs_ackno_ < abs_ackno ) {
     timer_ = 0;
-    pre_ackno_ = abs_ackno;
+    pre_abs_ackno_ = abs_ackno;
     num_consecutive_retran_ = 0;
     current_RTO_ = initial_RTO_ms_;
   }
