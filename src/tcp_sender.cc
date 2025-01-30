@@ -53,7 +53,7 @@ void TCPSender::push( const TransmitFunction& transmit )
       transmit( message );
       receive_window_ -= message_length;
       temp_receive_window -= message_length;
-      send_buffer_[abs_seqno_] = message;
+      send_buffer_.push_back(make_pair(abs_seqno_, message));
       seqno_ = seqno_ + message_length;
       abs_seqno_ += message_length;
       stream_bytes = reader().peek();
@@ -84,9 +84,8 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     return;
   }
 
-  vector<uint64_t> key_to_erase;
+  uint64_t erase_count = 0;
   for ( auto x = send_buffer_.begin(); x != send_buffer_.end(); x++ ) {
-
     if ( x->first + x->second.sequence_length() <= abs_ackno ) {
       if ( x->second.SYN ) {
         receive_window_ = max( uint16_t( 1 ), msg.window_size );
@@ -94,12 +93,13 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
       } else {
         receive_window_ += x->second.sequence_length();
       }
-      key_to_erase.push_back( x->first );
+      erase_count += 1;
+    }
+    else{
+      break;
     }
   }
-  for ( size_t x = 0; x < key_to_erase.size(); x++ ) {
-    send_buffer_.erase( key_to_erase[x] );
-  }
+  send_buffer_.erase(send_buffer_.begin(), send_buffer_.begin() + erase_count);
 
   receiver_full_ = ( msg.window_size == 0 );
   if ( msg.window_size > max_receive_window_ ) {
