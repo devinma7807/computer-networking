@@ -44,7 +44,7 @@ private:
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
   // map<uint64_t, TCPSenderMessage> send_buffer_{};
-  std::vector<std::pair<uint64_t, TCPSenderMessage>> send_buffer_{};
+  std::vector<std::pair<uint64_t, TCPSenderMessage>> send_buffer_ {};
   uint64_t abs_seqno_ = 0;
   Wrap32 seqno_ { 0 };
   uint16_t receive_window_ = 1;
