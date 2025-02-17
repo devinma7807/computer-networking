@@ -55,7 +55,6 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
     arp_frame.header.dst = ETHERNET_BROADCAST;
     arp_frame.payload = serialize(arp_request);
     transmit(arp_frame);
-    pending_arp_requests_[next_hop_ip].second = 0;
   }
   pending_arp_requests_[next_hop_ip].first.push_back(dgram);
 }
@@ -77,7 +76,7 @@ void NetworkInterface::recv_frame( EthernetFrame frame )
   if (frame.header.type == EthernetHeader::TYPE_ARP){
     ARPMessage arp;
     if (parse(arp, frame.payload)){
-      arp_cache_[arp.sender_ip_address] = make_pair(arp.sender_ethernet_address, 30);
+      arp_cache_[arp.sender_ip_address] = make_pair(arp.sender_ethernet_address, 30000);
       if (arp.opcode == ARPMessage::OPCODE_REQUEST && arp.target_ip_address == ip_address_.ipv4_numeric()){
         ARPMessage arp_response;
         arp_response.opcode = ARPMessage::OPCODE_REPLY;
@@ -93,13 +92,46 @@ void NetworkInterface::recv_frame( EthernetFrame frame )
         response_frame.payload = serialize(arp_response);
         transmit(response_frame);
       }
+      else if (arp.opcode == ARPMessage::OPCODE_REPLY && arp.target_ip_address == ip_address_.ipv4_numeric()){
+        if (pending_arp_requests_.find(arp.sender_ip_address) != pending_arp_requests_.end()){
+          for (auto it = pending_arp_requests_[arp.sender_ip_address].first.begin(); it != pending_arp_requests_[arp.sender_ip_address].first.end(); it ++){
+            EthernetFrame eframe;
+            eframe.header.dst = arp.sender_ethernet_address;
+            eframe.header.src = ethernet_address_;
+            eframe.header.type = EthernetHeader::TYPE_IPv4;
+            eframe.payload = serialize(*it); 
+            transmit(eframe);
+          }
+          pending_arp_requests_.erase(arp.sender_ip_address);
+        }
+      }
     }
   }
-
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void NetworkInterface::tick( const size_t ms_since_last_tick )
 {
-  debug( "unimplemented tick({}) called", ms_since_last_tick );
+  auto arp_it = arp_cache_.begin();
+  while (arp_it != arp_cache_.end()){
+    if (arp_it->second.second <= ms_since_last_tick){
+      arp_it = arp_cache_.erase(arp_it);
+    }
+    else{
+      arp_it->second.second -= ms_since_last_tick;
+      arp_it ++;
+    }
+  }
+
+  auto pending_arp_it = pending_arp_requests_.begin();
+  while (pending_arp_it != pending_arp_requests_.end()){
+    pending_arp_it->second.second += ms_since_last_tick;
+
+    if (pending_arp_it->second.second > 5000){
+      pending_arp_it = pending_arp_requests_.erase(pending_arp_it);
+    }
+    else{
+      pending_arp_it ++;
+    }
+  }
 }
