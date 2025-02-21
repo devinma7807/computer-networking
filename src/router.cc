@@ -20,45 +20,45 @@ void Router::add_route( const uint32_t route_prefix,
        << static_cast<int>( prefix_length ) << " => " << ( next_hop.has_value() ? next_hop->ip() : "(direct)" )
        << " on interface " << interface_num << "\n";
 
-  route_to_next_ next_dst = {next_hop, interface_num};
+  route_to_next_ next_dst = { next_hop, interface_num };
   routing_table_[prefix_length][route_prefix] = next_dst;
 }
 
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
-  for (auto &interface: interfaces_){
-    auto &interface_queue = interface -> datagrams_received();
+  for ( auto& interface : interfaces_ ) {
+    auto& interface_queue = interface->datagrams_received();
 
-    while (!interface_queue.empty()){
+    while ( !interface_queue.empty() ) {
       InternetDatagram dgram = interface_queue.front();
       interface_queue.pop();
-      
-      if (dgram.header.ttl <= 1){
+
+      if ( dgram.header.ttl <= 1 ) {
         return;
       }
       dgram.header.ttl -= 1;
       dgram.header.compute_checksum();
 
-      for (auto it = routing_table_.rbegin(); it != routing_table_.rend(); it++){
-        
+      for ( auto it = routing_table_.rbegin(); it != routing_table_.rend(); it++ ) {
+
         uint32_t dst_route_prefix = dgram.header.dst;
-        if (it->first == 0){
-          if (it->second.find(dst_route_prefix) == it->second.end()){
+        if ( it->first == 0 ) {
+          if ( it->second.find( dst_route_prefix ) == it->second.end() ) {
             dst_route_prefix = 0;
           }
-        }
-        else{
+        } else {
           uint8_t num_shift = 32 - it->first;
-          dst_route_prefix = (dst_route_prefix >> num_shift) << num_shift;
+          dst_route_prefix = ( dst_route_prefix >> num_shift ) << num_shift;
         }
 
-        if (it->second.find(dst_route_prefix) != it->second.end()){
-          if (it->second[dst_route_prefix].next_hop.has_value()){
-            this->interface(it->second[dst_route_prefix].interface_num)->send_datagram(dgram, *it->second[dst_route_prefix].next_hop);
-          }
-          else{
-            this->interface(it->second[dst_route_prefix].interface_num)->send_datagram(dgram, Address::from_ipv4_numeric(dgram.header.dst));
+        if ( it->second.find( dst_route_prefix ) != it->second.end() ) {
+          if ( it->second[dst_route_prefix].next_hop.has_value() ) {
+            this->interface( it->second[dst_route_prefix].interface_num )
+              ->send_datagram( dgram, *it->second[dst_route_prefix].next_hop );
+          } else {
+            this->interface( it->second[dst_route_prefix].interface_num )
+              ->send_datagram( dgram, Address::from_ipv4_numeric( dgram.header.dst ) );
           }
           break;
         }

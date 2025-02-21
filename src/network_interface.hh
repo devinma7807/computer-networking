@@ -86,5 +86,4 @@ private:
 
   std::unordered_map<uint32_t, std::pair<EthernetAddress, size_t>> arp_cache_ {};
   std::unordered_map<uint32_t, std::pair<std::vector<InternetDatagram>, size_t>> pending_arp_requests_ {};
-  
 };
