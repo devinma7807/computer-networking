@@ -33,15 +33,25 @@ void Router::route()
     while (!interface_queue.empty()){
       InternetDatagram dgram = interface_queue.front();
       interface_queue.pop();
-
+      
       if (dgram.header.ttl <= 1){
         return;
       }
       dgram.header.ttl -= 1;
+      dgram.header.compute_checksum();
 
-      for (auto it = routing_table_.rbegin(); it != routing_table_.rend(); ++it){
-        uint8_t dst_shift_length = 32 - it->first;
-        uint32_t dst_route_prefix = (dgram.header.dst >> dst_shift_length) << dst_shift_length;
+      for (auto it = routing_table_.rbegin(); it != routing_table_.rend(); it++){
+        
+        uint32_t dst_route_prefix = dgram.header.dst;
+        if (it->first == 0){
+          if (it->second.find(dst_route_prefix) == it->second.end()){
+            dst_route_prefix = 0;
+          }
+        }
+        else{
+          uint8_t num_shift = 32 - it->first;
+          dst_route_prefix = (dst_route_prefix >> num_shift) << num_shift;
+        }
 
         if (it->second.find(dst_route_prefix) != it->second.end()){
           if (it->second[dst_route_prefix].next_hop.has_value()){
