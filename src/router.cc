@@ -32,8 +32,27 @@ void Router::route()
 
     while (!interface_queue.empty()){
       InternetDatagram dgram = interface_queue.front();
-      
+      interface_queue.pop();
 
+      if (dgram.header.ttl <= 1){
+        return;
+      }
+      dgram.header.ttl -= 1;
+
+      for (auto it = routing_table_.rbegin(); it != routing_table_.rend(); ++it){
+        uint8_t dst_shift_length = 32 - it->first;
+        uint32_t dst_route_prefix = (dgram.header.dst >> dst_shift_length) << dst_shift_length;
+
+        if (it->second.find(dst_route_prefix) != it->second.end()){
+          if (it->second[dst_route_prefix].next_hop.has_value()){
+            this->interface(it->second[dst_route_prefix].interface_num)->send_datagram(dgram, *it->second[dst_route_prefix].next_hop);
+          }
+          else{
+            this->interface(it->second[dst_route_prefix].interface_num)->send_datagram(dgram, Address::from_ipv4_numeric(dgram.header.dst));
+          }
+          break;
+        }
+      }
     }
   }
 }

@@ -37,10 +37,10 @@ private:
   // The router's collection of network interfaces
   std::vector<std::shared_ptr<NetworkInterface>> interfaces_ {};
   struct route_to_next_{
-    optional<Address> next_hop;
+    std::optional<Address> next_hop;
     size_t interface_num;
   };
 
-  std::map<uint8_t, unordered_map<uint32_t, route_to_next_>> routing_table_ {};
+  std::map<uint8_t, std::unordered_map<uint32_t, route_to_next_>> routing_table_ {};
 
 };
