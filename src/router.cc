@@ -20,11 +20,20 @@ void Router::add_route( const uint32_t route_prefix,
        << static_cast<int>( prefix_length ) << " => " << ( next_hop.has_value() ? next_hop->ip() : "(direct)" )
        << " on interface " << interface_num << "\n";
 
-  debug( "unimplemented add_route() called" );
+  route_to_next_ next_dst = {next_hop, interface_num};
+  routing_table_[prefix_length][route_prefix] = next_dst;
 }
 
 // Go through all the interfaces, and route every incoming datagram to its proper outgoing interface.
 void Router::route()
 {
-  debug( "unimplemented route() called" );
+  for (auto &interface: interfaces_){
+    auto &interface_queue = interface -> datagrams_received();
+
+    while (!interface_queue.empty()){
+      InternetDatagram dgram = interface_queue.front();
+      
+
+    }
+  }
 }
