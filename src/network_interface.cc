@@ -63,7 +63,8 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
 //! \param[in] frame the incoming Ethernet frame
 void NetworkInterface::recv_frame( EthernetFrame frame )
 {
-  if ( frame.header.dst != ethernet_address_ && frame.header.dst != ETHERNET_BROADCAST ) {
+  if ( frame.header.dst != ethernet_address_ && frame.header.dst != ETHERNET_BROADCAST
+       && frame.header.type != EthernetHeader::TYPE_ARP ) {
     return;
   }
 
@@ -107,6 +108,17 @@ void NetworkInterface::recv_frame( EthernetFrame frame )
           pending_arp_requests_.erase( arp.sender_ip_address );
         }
       }
+      for ( auto it = pending_arp_requests_[arp.sender_ip_address].first.begin();
+            it != pending_arp_requests_[arp.sender_ip_address].first.end();
+            it++ ) {
+        EthernetFrame eframe;
+        eframe.header.dst = arp.sender_ethernet_address;
+        eframe.header.src = ethernet_address_;
+        eframe.header.type = EthernetHeader::TYPE_IPv4;
+        eframe.payload = serialize( *it );
+        transmit( eframe );
+      }
+      pending_arp_requests_.erase( arp.sender_ip_address );
     }
   }
 }

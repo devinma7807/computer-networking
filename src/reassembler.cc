@@ -1,6 +1,7 @@
 #include "reassembler.hh"
 #include "debug.hh"
 #include <chrono>
+#include <iostream>
 #include <vector>
 using namespace std;
 
@@ -14,6 +15,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   uint64_t write_index = max( next_expected, first_index );
   if ( is_last_substring && last_data_index <= last_available_index ) {
     finish = true;
+    finish_set = first_index + data_size;
   }
 
   last_data_index = min( last_available_index, last_data_index );
@@ -24,10 +26,10 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
   string_view trimmed_data( data.data() + write_index - first_index,
                             min( last_data_index - write_index + 1, data.size() ) );
-
   if ( cache_.empty() && last_data_index >= write_index ) {
     cache_[write_index] = make_pair( last_data_index, string( trimmed_data ) );
   } else {
+
     for ( auto it = cache_.begin(); it != cache_.end(); ++it ) {
 
       uint64_t current_segment_start_index = it->first;
@@ -75,6 +77,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   }
 
   string data_to_push = "";
+  // int last_seqno_sent = -2;
   while ( !cache_.empty() && cache_.begin()->first == next_expected ) {
     uint64_t current_segment_size = cache_.begin()->second.first - cache_.begin()->first + 1;
     data_to_push += cache_.begin()->second.second;
@@ -86,7 +89,7 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     output_.writer().push( data_to_push );
   }
 
-  if ( finish && cache_.empty() ) {
+  if ( finish && cache_.empty() && next_expected >= finish_set ) {
     output_.writer().close();
   }
 }
