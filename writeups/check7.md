@@ -24,10 +24,12 @@ Group portion:
 
 - Who is your lab partner (and what is their SUNet ID, e.g. "winstein")? Thanawan Atchariyachanvanit (thanawan)
 
-- Did your implementations successfully start and end a conversation with each other (with each implementation acting as ``client'' or as ``server'')? Yes, my implementation succeeded at being both the server and the client, the checksums for match for when I was sending and receiving the datagrams.
+- Did your implementations successfully start and end a conversation with each other (with each implementation acting as ``client'' or as ``server'')? 
+Yes, my implementation succeeded at being both the server and the client, the checksums for match for when I was sending and receiving the datagrams.
 
 - Did you successfully transfer a one-megabyte file between your two
-  implementations, with contents identical upon receipt? Yes, our checksums matched.
+  implementations, with contents identical upon receipt? 
+  Yes, our checksums matched.
 
 - Please describe what code changes, if any, were necessary to pass
   these steps, either by you or your lab partner. 
